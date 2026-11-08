@@ -265,8 +265,8 @@ Khi người dùng nhấn Button trên giao diện Web/App:
 ### 8.4. Hình ảnh giao diện Web/App
 
 > Thêm ảnh giao diện giám sát dữ liệu tại đây.
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/68e51e8a-3a39-4858-b385-214dfff4b9ef" />
 
-> Thêm ảnh giao diện điều khiển LED và Buzzer tại đây.
 
 ## 9. Công nghệ và phần mềm sử dụng
 
