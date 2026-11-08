@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Giám sát té ngã</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#e9eff1;--panel:#fff;--ink:#12252d;--mute:#5d727a;--ok:#0e6f73;--alert:#d7263d;--line:#cfdadd}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 "Be Vietnam Pro",system-ui,sans-serif}
+main{max-width:1000px;margin:0 auto;padding:24px 16px 48px}
+.status{background:var(--ok);color:#fff;border-radius:6px;padding:28px 24px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.status.fall{background:var(--alert);animation:pulse 1s infinite}
+.status h1{margin:0;font-size:clamp(1.6rem,4vw,2.4rem);font-weight:700;line-height:1.15}
+.status p{margin:6px 0 0;opacity:.9}
+.conn{font-size:.9rem;opacity:.9}
+@keyframes pulse{50%{filter:brightness(1.18)}}
+@media (prefers-reduced-motion:reduce){.status.fall{animation:none}}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+@media (max-width:720px){.grid{grid-template-columns:1fr}}
+section{background:var(--panel);border-radius:6px;padding:20px}
+h2{margin:0 0 4px;font-size:1rem;font-weight:500;color:var(--mute)}
+.big{font-size:3rem;font-weight:700;line-height:1.1}
+.big small{font-size:1.1rem;font-weight:400;color:var(--mute);margin-left:4px}
+.axes{display:flex;gap:20px;margin:8px 0 12px;padding-top:8px;border-top:1px solid var(--line);color:var(--mute);font-size:.9rem}
+.axes b{color:var(--ink);font-weight:500}
+.chart{height:200px}
+.controls{grid-column:1/-1;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.controls h2{flex:1 1 100%}
+button{font:500 1rem "Be Vietnam Pro",sans-serif;padding:12px 22px;border-radius:6px;border:2px solid var(--ink);background:var(--panel);color:var(--ink);cursor:pointer}
+button[aria-pressed="true"]{background:var(--ink);color:#fff}
+button:focus-visible{outline:3px solid var(--ok);outline-offset:2px}
+.hint{color:var(--mute);font-size:.9rem;flex:1 1 240px}
+</style>
+</head>
+<body>
+<main>
+  <div class="status" id="status">
+    <div>
+      <h1 class="status-title">Chờ dữ liệu từ ESP32…</h1>
+      <p class="status-note">Cấp nguồn cho mạch và đảm bảo ESP32 đã kết nối WiFi.</p>
+    </div>
+    <div class="conn" id="conn">Đang kết nối broker…</div>
+  </div>
+
+  <div class="grid">
+    <section>
+      <h2>Gia tốc tổng</h2>
+      <div class="big"><span class="acc-value">--</span><small>g</small></div>
+      <div class="axes">
+        <span>X <b class="ax-value">--</b></span>
+        <span>Y <b class="ay-value">--</b></span>
+        <span>Z <b class="az-value">--</b></span>
+      </div>
+      <div class="chart"><canvas id="accChart"></canvas></div>
+    </section>
+
+    <section>
+      <h2>Góc nghiêng so với phương thẳng đứng</h2>
+      <div class="big"><span class="tilt-value">--</span><small>độ</small></div>
+      <div class="axes"><span>Đứng thẳng ≈ 0°, nằm ngang ≈ 90°</span></div>
+      <div class="chart"><canvas id="tiltChart"></canvas></div>
+    </section>
+
+    <section class="controls">
+      <h2>Điều khiển thủ công</h2>
+      <button class="btn-led" aria-pressed="false">Đèn LED: tắt</button>
+      <button class="btn-buzzer" aria-pressed="false">Còi: tắt</button>
+      <span class="hint">Khi có báo động té ngã, bấm nút đang bật hoặc bấm “tắt” để xác nhận và dừng đèn, còi.</span>
+    </section>
+  </div>
+</main>
+
+<script>
+const PREFIX = 'fallgroup01/falldetect';          // phải trùng TOPIC_PREFIX trong code ESP32
+const BROKER = 'wss://broker.hivemq.com:8884/mqtt';
+const ACC_TH = 2.5;
+const MAX_POINTS = 60;
+
+const all = s => document.querySelectorAll(s);
+const setText = (s, v) => all(s).forEach(e => e.textContent = v);
+
+function makeChart(id, label, color, threshold) {
+  const datasets = [{label, data: [], borderColor: color, borderWidth: 2, pointRadius: 0, tension: .2}];
+  if (threshold != null) datasets.push({label: 'Ngưỡng', data: [], borderColor: '#d7263d', borderDash: [6,4], borderWidth: 1, pointRadius: 0});
+  return new Chart(document.getElementById(id), {
+    type: 'line',
+    data: {labels: [], datasets},
+    options: {animation: false, maintainAspectRatio: false,
+      scales: {x: {ticks: {maxTicksLimit: 5}}, y: {min: 0, suggestedMax: threshold != null ? 4 : 120}},
+      plugins: {legend: {display: threshold != null}}}
+  });
+}
+const accChart  = makeChart('accChart',  'Gia tốc (g)', '#0e6f73', ACC_TH);
+const tiltChart = makeChart('tiltChart', 'Góc nghiêng (độ)', '#12252d', null);
+
+function push(chart, time, value, threshold) {
+  const d = chart.data;
+  d.labels.push(time);
+  d.datasets[0].data.push(value);
+  if (threshold != null) d.datasets[1].data.push(threshold);
+  if (d.labels.length > MAX_POINTS) { d.labels.shift(); d.datasets.forEach(s => s.data.shift()); }
+  chart.update('none');
+}
+
+const state = {led: false, buzzer: false};
+function renderButtons() {
+  const led = document.querySelector('.btn-led'), bz = document.querySelector('.btn-buzzer');
+  led.setAttribute('aria-pressed', state.led);   led.textContent = 'Đèn LED: ' + (state.led ? 'bật' : 'tắt');
+  bz.setAttribute('aria-pressed', state.buzzer); bz.textContent  = 'Còi: ' + (state.buzzer ? 'bật' : 'tắt');
+}
+
+const client = mqtt.connect(BROKER, {clientId: 'web-' + Math.random().toString(16).slice(2, 8), reconnectPeriod: 3000});
+const conn = document.getElementById('conn');
+client.on('connect', () => { conn.textContent = 'Đã kết nối broker'; client.subscribe(PREFIX + '/data'); });
+client.on('reconnect', () => conn.textContent = 'Đang kết nối lại…');
+client.on('offline',   () => conn.textContent = 'Mất kết nối broker');
+
+let lastMsg = 0;
+client.on('message', (topic, payload) => {
+  let d;
+  try { d = JSON.parse(payload.toString()); } catch { return; }
+  lastMsg = Date.now();
+
+  setText('.acc-value',  d.acc.toFixed(2));
+  setText('.ax-value',   d.ax.toFixed(2));
+  setText('.ay-value',   d.ay.toFixed(2));
+  setText('.az-value',   d.az.toFixed(2));
+  setText('.tilt-value', d.tilt.toFixed(1));
+
+  const t = new Date().toLocaleTimeString('vi-VN');
+  push(accChart, t, d.acc, ACC_TH);
+  push(tiltChart, t, d.tilt, null);
+
+  const box = document.getElementById('status');
+  box.classList.toggle('fall', !!d.fall);
+  setText('.status-title', d.fall ? 'Phát hiện té ngã' : 'Bình thường');
+  setText('.status-note', d.fall
+    ? 'Gia tốc tăng đột ngột và góc nghiêng thay đổi lớn. Bấm “tắt” để xác nhận.'
+    : 'Chưa phát hiện gia tốc hoặc góc nghiêng bất thường.');
+
+  state.led = !!d.led; state.buzzer = !!d.buzzer; renderButtons();
+});
+
+setInterval(() => {
+  if (lastMsg && Date.now() - lastMsg > 3000) {
+    document.getElementById('status').classList.remove('fall');
+    setText('.status-title', 'Mất dữ liệu từ ESP32');
+    setText('.status-note', 'Đã quá 3 giây chưa nhận được gói tin mới.');
+  }
+}, 1000);
+
+function toggle(device) {
+  state[device] = !state[device];
+  renderButtons();
+  client.publish(PREFIX + '/cmd/' + device, state[device] ? 'ON' : 'OFF');
+}
+document.querySelector('.btn-led').addEventListener('click', () => toggle('led'));
+document.querySelector('.btn-buzzer').addEventListener('click', () => toggle('buzzer'));
+</script>
+</body>
+</html>
