@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "author": "Phạm Tất Thắng",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 19.2, "left": -81.56, "attrs": {} },
+    { "type": "wokwi-mpu6050", "id": "imu1", "top": 23.02, "left": 88.72, "attrs": {} },
+    {
+      "type": "wokwi-led",
+      "id": "led1",
+      "top": 63.6,
+      "left": -274.6,
+      "attrs": { "color": "red" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r1",
+      "top": 99.95,
+      "left": -144,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-buzzer",
+      "id": "bz1",
+      "top": 108,
+      "left": -257.4,
+      "attrs": { "volume": "0.1" }
+    }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    [ "imu1:VCC", "esp:3V3", "red", [ "v-76.8", "h-240.07" ] ],
+    [ "esp:GND.2", "imu1:GND", "black", [ "v-86.4", "h134.32" ] ],
+    [ "imu1:SDA", "esp:21", "green", [ "v-9.6", "h-95.92", "v67.2" ] ],
+    [ "imu1:SCL", "esp:22", "green", [ "v-38.4", "h-115.12", "v76.8" ] ],
+    [ "led1:A", "r1:1", "green", [ "v0" ] ],
+    [ "esp:25", "r1:2", "green", [ "v0", "h-28.65" ] ],
+    [ "esp:GND.1", "led1:C", "black", [ "h-28.65", "v57.6", "h-172.8", "v-124.8" ] ],
+    [ "esp:26", "bz1:2", "green", [ "h-115.05", "v38.4" ] ],
+    [ "esp:GND.1", "bz1:1", "black", [ "h-67.05", "v28.8", "h-86.4" ] ]
+  ],
+  "dependencies": {}
+}
