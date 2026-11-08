@@ -334,12 +334,14 @@ Sau khi hoàn thành, hệ thống hướng đến các kết quả sau:
 - Hệ thống phát hiện tình huống nghi ngờ té ngã và kích hoạt cảnh báo.
 
 **Hình ảnh kết quả mô phỏng:**
+Khi mạch hoạt động, Wifi kết nối thành công. Dữ liệu được gửi lên DashBoard 
+<img width="1920" height="1080" alt="Screenshot (185)" src="https://github.com/user-attachments/assets/3e4a281e-1c84-4b49-8c16-7d97dd6f0145" />
+<img width="1920" height="1080" alt="Screenshot (188)" src="https://github.com/user-attachments/assets/3110cdbd-d2fe-443e-a9f2-a48194f02110" />
 
-> Thêm ảnh Serial Monitor tại đây.
 
-> Thêm ảnh kiểm tra dữ liệu trên MQTT Broker tại đây.
+Khi thông số có dấu hiệu bất thường, Led và Buzzer ngay lập tức báo hiệu
+<img width="1920" height="1080" alt="Screenshot (187)" src="https://github.com/user-attachments/assets/af0517a5-2d2b-4a65-9656-ba1cc76b2086" />
 
-> Thêm ảnh kết quả phát hiện té ngã tại đây.
 
 ## 12. Hướng phát triển
 
@@ -351,12 +353,3 @@ Sau khi hoàn thành, hệ thống hướng đến các kết quả sau:
 - Tích hợp chức năng gửi thông báo khẩn cấp khi phát hiện té ngã.
 - Tối ưu hóa thời gian xử lý và truyền dữ liệu giữa các Task FreeRTOS.
 
-## 13. Tác giả
-
-**Đề tài:** Thiết kế mạch phát hiện té ngã (Fall Detection) sử dụng ESP32 và MPU6050.
-
-**Nền tảng thực hiện:** Wokwi, Arduino IDE, FreeRTOS, MQTT và Web/App.
-
----
-
-⭐ *Dự án phục vụ mục đích học tập và nghiên cứu về hệ thống IoT, cảm biến MPU6050, giao thức MQTT và lập trình thời gian thực FreeRTOS.*
