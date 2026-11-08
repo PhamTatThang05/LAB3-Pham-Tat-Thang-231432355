@@ -61,9 +61,10 @@ Sử dụng Wokwi để thiết kế và mô phỏng mạch điện gồm ESP32,
 
 **Hình ảnh sơ đồ mạch:**
 
-> Thêm ảnh sơ đồ mạch Wokwi tại đây.
+<img width="956" height="862" alt="image" src="https://github.com/user-attachments/assets/353c93f0-977c-4c76-8015-fdd942e480a2" />
 
-**Link mô phỏng Wokwi:** [Dán đường dẫn dự án Wokwi tại đây]
+
+**Link mô phỏng Wokwi:** https://wokwi.com/projects/479988724310565889
 
 ## 5. Kiến trúc hệ thống FreeRTOS
 
@@ -342,6 +343,11 @@ Khi mạch hoạt động, Wifi kết nối thành công. Dữ liệu được g
 Khi thông số có dấu hiệu bất thường, Led và Buzzer ngay lập tức báo hiệu
 <img width="1920" height="1080" alt="Screenshot (187)" src="https://github.com/user-attachments/assets/af0517a5-2d2b-4a65-9656-ba1cc76b2086" />
 
+Trường hợp khi ở chế độ manual, khi không có bất thường ta ấn nút "Đèn LED: tắt" và "Còi: tắt" thì sẽ chuyển trạng thái của nút "Đèn LED: bật" và "Còi: bật", lúc này mạch vẫn sẽ báo hiệu dù không có bất thường
+<img width="1920" height="1080" alt="Screenshot (191)" src="https://github.com/user-attachments/assets/6d61c272-5d49-4734-8970-1fa0cd7e64bc" />
+
+Khi có bất thường ta ấn nút "Đèn LED: bật" và "Còi: bật" thì sẽ chuyển trạng thái của nút "Đèn LED: tắt" và "Còi: tắt", lúc này mạch sẽ không có báo hiệu dù vẫn phát hiện bất thường
+<img width="1920" height="1080" alt="Screenshot (190)" src="https://github.com/user-attachments/assets/2a6e316d-da30-4111-952c-766745e7d21d" />
 
 ## 12. Hướng phát triển
 
